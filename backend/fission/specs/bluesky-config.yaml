@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: default
+  name: bluesky-config
+data:
+  BSKY_QUERIES: "labor, coalition, greens, dutton, albanese, bandt, liberal"
+  BSKY_START_DATE: '2022-05-21T00:00:00Z'
+  BSKY_BATCH_SIZE: '10'
+  BSKY_USERNAME: 'angqim.bsky.social'
+  BSKY_PASSWORD: 'MlL20010929!'
+  FISSION_ENQUEUE_URL: 'http://router.fission/enqueue/bluesky'

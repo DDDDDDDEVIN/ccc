@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mastodon-config
+  namespace: default
+data:
+  MASTODON_BASE_URL: "https://mastodon.social"
+  MASTODON_TOKEN: "ZSezGTWZRjHPxlOMNuciUZrNkMS6nJcfU71v1dzEQX8"
+  HASHTAGS: "Labor,Liberal,Coalition,Greens,Dutton,Albanese,Liberal"
+  FISSION_ENQUEUE_URL: "http://router.fission/enqueue/mastodon"
+  MAX_POST: "40"
+  SEEM_KEY: "mastodon:seen_ids"

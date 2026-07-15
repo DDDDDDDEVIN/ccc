@@ -1,0 +1,6 @@
+atproto
+pytz==2023.3.post1
+praw==7.7.1
+redis==5.0.8
+
+

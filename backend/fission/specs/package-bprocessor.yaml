@@ -1,0 +1,27 @@
+include:
+- ./functions/bprocessor/bprocessor.py
+- ./functions/bprocessor/build.sh
+- ./functions/bprocessor/requirements.txt
+kind: ArchiveUploadSpec
+name: functions-bprocessor-bprocessor-py-6XRl
+
+---
+apiVersion: fission.io/v1
+kind: Package
+metadata:
+  creationTimestamp: null
+  name: bprocessor
+spec:
+  buildcmd: ./build.sh
+  deployment:
+    checksum: {}
+  environment:
+    name: python39x
+    namespace: ""
+  source:
+    checksum: {}
+    type: url
+    url: archive://functions-bprocessor-bprocessor-py-6XRl
+status:
+  buildstatus: pending
+  lastUpdateTimestamp: "2025-05-19T11:20:35Z"

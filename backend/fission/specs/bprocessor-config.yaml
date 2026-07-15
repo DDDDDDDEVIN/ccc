@@ -1,0 +1,112 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: default
+  name: bprocessor-config
+data:
+  TOPIC_MAPPING: |
+    {
+      "labor": ["labor", "albanese"],
+      "coalition": ["coalition", "liberal", "dutton"],
+      "greens": ["greens", "bandt"]
+    }
+  STATE_MAPPING: |
+    {
+      "NSW": [
+        "new south wales",
+        "nsw",
+        "Sydney",
+        "Newcastle",
+        "Wollongong",
+        "Albury",
+        "Maitland",
+        "sydney",
+        "newcastle",
+        "newy",
+        "wollongong",
+        "gong",
+        "albury",
+        "maitland"
+      ],
+
+      "VIC": [
+        "victoria",
+        "vic",
+        "Melbourne",
+        "Geelong",
+        "Ballarat",
+        "Bendigo",
+        "Wodonga",
+        "melbourne",
+        "melb",
+        "geelong",
+        "ballarat",
+        "bendigo",
+        "wodonga"
+      ],
+
+      "QLD": [
+        "queensland",
+        "qld",
+        "Brisbane",
+        "Gold Coast",
+        "Townsville",
+        "Cairns",
+        "Toowoomba",
+        "Rockhampton",
+        "Mackay",
+        "brisbane",
+        "bris",
+        "gold coast",
+        "gc",
+        "townsville",
+        "cairns",
+        "toowoomba",
+        "rockhampton",
+        "rocky",
+        "mackay"
+      ],
+
+      "SA": [
+        "south australia",
+        "sa",
+        "Adelaide",
+        "Mount Gambier",
+        "adelaide",
+        "adel",
+        "mount gambier"
+      ],
+
+      "WA": [
+        "western australia",
+        "wa",
+        "Perth",
+        "Bunbury",
+        "perth",
+        "bunbury"
+      ],
+
+      "TAS": [
+        "tasmania",
+        "tas",
+        "Hobart",
+        "Launceston",
+        "hobart",
+        "launceston"
+      ],
+
+      "NT": [
+        "northern territory",
+        "nt",
+        "Darwin",
+        "darwin"
+      ],
+
+      "ACT": [
+        "australian capital territory",
+        "act",
+        "Canberra",
+        "canberra",
+        "cbr"
+      ]
+    }

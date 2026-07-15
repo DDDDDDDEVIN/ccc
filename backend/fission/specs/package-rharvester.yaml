@@ -1,0 +1,27 @@
+include:
+- ./functions/rharvester/rharvester.py
+- ./functions/rharvester/build.sh
+- ./functions/rharvester/requirements.txt
+kind: ArchiveUploadSpec
+name: functions-rharvester-rharvester-py-8gTH
+
+---
+apiVersion: fission.io/v1
+kind: Package
+metadata:
+  creationTimestamp: null
+  name: rharvester
+spec:
+  buildcmd: ./build.sh
+  deployment:
+    checksum: {}
+  environment:
+    name: python39x
+    namespace: ""
+  source:
+    checksum: {}
+    type: url
+    url: archive://functions-rharvester-rharvester-py-8gTH
+status:
+  buildstatus: pending
+  lastUpdateTimestamp: "2025-05-18T06:56:39Z"

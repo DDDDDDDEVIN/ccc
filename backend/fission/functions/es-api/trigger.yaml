@@ -1,0 +1,12 @@
+apiVersion: fission.io/v1
+kind: HTTPTrigger
+metadata:
+  name: es-api
+  namespace: default
+spec:
+  relativeURL: /es-api
+  method: GET
+  functionReference:
+    type: name
+    name: es-api
+  createIngress: true 

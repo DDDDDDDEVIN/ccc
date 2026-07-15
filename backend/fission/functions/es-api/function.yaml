@@ -1,0 +1,36 @@
+apiVersion: fission.io/v1
+kind: Function
+metadata:
+  name: es-api
+  namespace: default
+spec:
+  package:
+    functionName: es-api.main
+    environment:
+      name: python39x
+      namespace: default
+    source:
+      type: local
+      path: es_api.py
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "256Mi"
+  concurrency: 1
+  requestsPerPod: 1
+  podspec:
+    containers:
+      - name: es-api
+        env:
+          - name: ES_URL
+            value: "https://elasticsearch-master:9200"
+          - name: ES_USER
+            value: "elastic"
+          - name: ES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: es-credentials
+                key: password 

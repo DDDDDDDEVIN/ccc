@@ -1,0 +1,16 @@
+{
+  "mappings": {
+    "properties": {
+      "topic":        { "type": "text", "fields": { "keyword": { "type": "keyword" } } },
+      "date":         { "type": "date" },
+      "sentiment":    { "type": "float" },
+      "text":         { "type": "text", "fields": { "keyword": { "type": "keyword" } } },
+      "created_at":   { "type": "date" },
+      "location":     { "type": "text", "fields": { "keyword": { "type": "keyword" } } },
+      "post_id":      { "type": "text", "fields": { "keyword": { "type": "keyword" } } },
+      "source":       { "type": "text", "fields": { "keyword": { "type": "keyword" } } },
+      "tags":         { "type": "text", "fields": { "keyword": { "type": "keyword" } } },
+      "user_id":      { "type": "text", "fields": { "keyword": { "type": "keyword" } } }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "query": {
+    "bool": {
+      "must": [
+        { "match": { "topic": "Labor" }},
+        { "match": { "date": "2025-05-01" }},
+        { "match": { "text": "election policy" }}
+      ],
+      "filter": [
+        { "term": { "location.keyword": "Melbourne" }},
+        { "term": { "source.keyword": "reddit" }},
+        {
+          "range": {
+            "sentiment": {
+              "gte": 0.2,
+              "lte": 1.0
+            }
+          }
+        }
+      ]
+    }
+  },
+  "sort": [
+    { "created_at": { "order": "desc" }}
+  ],
+  "size": 50
+}

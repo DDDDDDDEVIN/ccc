@@ -1,0 +1,11 @@
+apiVersion: fission.io/v1
+kind: TimeTrigger
+metadata:
+  creationTimestamp: null
+  name: bharvester-h-timer
+spec:
+  cron: '@every 5s'
+  functionref:
+    functionweights: null
+    name: bharvester-h
+    type: name

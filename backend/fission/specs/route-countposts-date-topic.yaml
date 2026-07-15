@@ -1,0 +1,22 @@
+apiVersion: fission.io/v1
+kind: HTTPTrigger
+metadata:
+  creationTimestamp: null
+  name: countposts-date-topic
+spec:
+  createingress: false
+  functionref:
+    functionweights: null
+    name: countposts
+    type: name
+  host: ""
+  ingressconfig:
+    annotations: null
+    host: '*'
+    path: /posts/days/{date:[0-9]{4}-[0-9]{2}-[0-9]{2}}/topics/{topic:[a-zA-Z0-9_-]+}
+    tls: ""
+  method: ""
+  methods:
+  - GET
+  prefix: ""
+  relativeurl: /posts/days/{date:[0-9]{4}-[0-9]{2}-[0-9]{2}}/topics/{topic:[a-zA-Z0-9_-]+}

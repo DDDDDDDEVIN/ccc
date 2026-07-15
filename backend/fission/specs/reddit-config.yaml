@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reddit-config
+  namespace: default
+data:
+  REDDIT_SUBREDDITS: "australia, auslaw, auspol, sydney, newcastle, centralcoastnsw, illawarra, melbourne, geelong, victoria, brisbane, goldcoast, sunshinecoast, adelaide, perth, westernaustralia, tasmania, hobart, canberra, darwin"
+  REDDIT_QUERIES: "labor,coalition,greens,dutton,albanese,bandt,liberal"
+  REDDIT_START_DATE: "2022-05-21T00:00:00Z"
+  REDDIT_BATCH_SIZE: "100"
+  FISSION_ENQUEUE_URL: "http://router.fission/enqueue/reddit"
+  REDDIT_CLIENT_ID: "BETb_nKeGrP29vnkWgNDWA"
+  REDDIT_CLIENT_SECRET: "3lCqBDP_99V4PD9uaqLyKdXllfp0JQ"
+  REDDIT_USER_AGENT: "DuttonAnalytics by u/YiChenLong"
+  REDDIT_CURSOR_KEY: "reddit:cursor"
