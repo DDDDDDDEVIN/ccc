@@ -1,42 +1,142 @@
-# COMP90024 Team 60 - AutoPolis: Read-Time Social Media Sentiment Analysis for Australian Election Discourse
+# AutoPolis
 
-This repository contains the implementation for Assignment 2 of COMP90024 at the University of Melbourne. The project focuses on big data analytics using real-time and historical data harvesting from social media platforms relevant to Australian public discourse.
+[![Tests](https://github.com/DDDDDDDEVIN/ccc/actions/workflows/tests.yml/badge.svg)](https://github.com/DDDDDDDEVIN/ccc/actions/workflows/tests.yml)
 
-## Team Members
+An event-driven cloud pipeline for analysing Australian federal election discourse across Reddit, Mastodon, and Bluesky.
 
-- Angqi Meng – 1268867
-- Yichen Long – 1497321
-- Xuan Wu – 1483104
-- Zining Zhang – 1508501
-- Jingqiu Meng – 1506602
+AutoPolis collects public social posts, normalises platform-specific payloads into a shared schema, enriches them with political-party and Australian location labels, and stores the results in Elasticsearch for cross-platform sentiment analysis and visualisation.
 
-## Project Overview
+> University of Melbourne COMP90024 Cluster and Cloud Computing team project. The deployed university cloud environment is no longer active, but the architecture, infrastructure specifications, tests, sample data, and analysis notebook are preserved in this repository.
 
-This cloud-based system used Kubernetes, Fission, and ElasticSearch to stream and analyze social media data from Reddit, Bluesky, and Mastodon. It extracts insights using sentiment analysis and geolocation tagging, exposing the results via a RESTful API and visualizing them in a Jupyter Notebook frontend.
+## What the project explores
 
-# Scenarios:
-(1) How does the sentiment of different regions for different parties change since 2022 election?
+The project was designed around two questions:
 
-(2) Is the sentiment of Australians for the particular parties the same across Mastodon, Bluesky and Reddit?
+1. How has sentiment towards Australian political parties varied by region since the 2022 federal election?
+2. Does sentiment towards the same party differ across Reddit, Mastodon, and Bluesky?
+
+The analysis notebook includes post-volume trends, sentiment distributions, party and platform comparisons, word clouds, user-activity analysis, and state-level geographic visualisations.
 
 ## Architecture
 
 ```text
-Timer Trigger (Harvester) ──▶ HTTP Trigger (Enqueue) ──▶ MQ Trigger (Processor) ──▶ MQ Trigger (AddObservations) ──▶ ElasticSearch ──▶ HTTP Trigger (RESTful API) ──▶ Jupyter Notebook
+                         ┌──────────────────────┐
+                         │ Fission time triggers│
+                         └──────────┬───────────┘
+                                    │
+                ┌───────────────────┼───────────────────┐
+                ▼                   ▼                   ▼
+        Reddit harvester    Mastodon harvester   Bluesky harvester
+                └───────────────────┼───────────────────┘
+                                    │ HTTP
+                                    ▼
+                           ┌─────────────────┐
+                           │ enqueue function│
+                           └────────┬────────┘
+                                    │
+                                    ▼
+                       Redis platform-specific queues
+                                    │
+                ┌───────────────────┼───────────────────┐
+                ▼                   ▼                   ▼
+        Reddit processor    Mastodon processor   Bluesky processor
+                └───────────────────┼───────────────────┘
+                                    │ observations queue
+                                    ▼
+                         addobservations function
+                                    │
+                                    ▼
+                             Elasticsearch
+                                    │
+                           ┌────────┴────────┐
+                           ▼                 ▼
+                       REST APIs       Jupyter analysis
 ```
 
-### Components
-- **Harvesters**: Platform-specific harvesters triggered at custom intervals (e.g. 20s for Bluesky).
-- **Processors**: Extract metadata like `created_at`, `text`, `tags`, `user_id`, `location`.
-- **Redis**: Used for message queuing between functions and for tracking cursors and deduplication.
-- **ElasticSearch**: Central storage for processed observations.
-- **RESTful API**: Provides endpoint access to the indexed data.
-- **Kibana**: Used for dashboard and geographic data visualization.
-- **Jupyter Notebook**: Final data analytics and visualization tool for scenario evaluation.
+Fission time triggers invoke each harvester at a platform-appropriate interval. Harvesters send batches through an HTTP enqueue function, which routes them to Redis lists. KEDA-backed Fission message-queue triggers scale the corresponding processors and forward their normalised output to the `observations` queue. A final function indexes each observation in Elasticsearch using a deterministic document ID.
 
-### Deployment Steps
+Redis also stores platform cursors and deduplication state so repeated harvesting does not continually reprocess the same posts.
+
+## Technology stack
+
+| Area | Technologies |
+| --- | --- |
+| Cloud runtime | Kubernetes, Fission, KEDA |
+| Event pipeline | Redis lists and message-queue triggers |
+| Data sources | Reddit API/PRAW, Mastodon API, Bluesky/AT Protocol |
+| Backend | Python, Flask |
+| Search and storage | Elasticsearch 8, Kibana |
+| Analysis | Pandas, Transformers, VADER, GeoPandas |
+| Visualisation | Matplotlib, Seaborn, Plotly, WordCloud |
+| Testing | `unittest`, Flask test client, mocks |
+
+## Data model and enrichment
+
+All three processors produce the same observation shape:
+
+```json
+{
+  "created_at": "2025-05-01T09:30:00Z",
+  "text": "Example social post",
+  "location": "VIC",
+  "source": "mastodon",
+  "tags": ["auspol"],
+  "post_id": "platform-specific-id",
+  "user_id": "platform-specific-user",
+  "topic": "labor"
+}
+```
+
+Topic aliases are mapped to the canonical categories `labor`, `coalition`, and `greens`. Location enrichment searches post content—and Reddit community metadata where available—for Australian state, territory, and major-city aliases.
+
+## Repository map
+
+```text
+backend/fission/functions/   Fission harvesters, processors, queue and API functions
+backend/fission/specs/       Kubernetes/Fission functions, packages and trigger specs
+database/                    Elasticsearch mapping and query examples
+data/                        500-record anonymised sample and bulk-import files
+frontend/frontend.ipynb      Sentiment analysis and interactive visualisations
+test/                        Unit and mocked end-to-end tests
+docs/                        Original project report
+```
+
+Key implementation areas:
+
+- `*harvester`: platform API access, cursors, batching, and deduplication.
+- `enqueue`: HTTP-to-Redis topic routing.
+- `*processor`: schema normalisation, topic mapping, and location extraction.
+- `addobservations`: deterministic indexing into Elasticsearch.
+- `countposts`: date- and topic-filtered post counts.
+- `es-api`: Elasticsearch health, index listing, and scroll-search endpoints.
+
+## Running the analysis locally
+
+The cloud ingestion pipeline requires Kubernetes, Fission, Redis, Elasticsearch, and valid platform credentials. The analysis can instead be explored independently using the included sample data and notebook.
+
 ```bash
-# 1. Create runtime secrets (replace the placeholder values)
+conda create -n autopolis python=3.10 -y
+conda activate autopolis
+conda install -c conda-forge geopandas ipywidgets -y
+pip install pandas plotly seaborn matplotlib wordcloud transformers nltk requests
+jupyter notebook frontend/frontend.ipynb
+```
+
+The notebook was originally connected to the deployed Elasticsearch API. To run it after the original cluster shutdown, replace its API-loading cell with the sample dataset in `data/sample_social_posts_500.json`, or point `BASE_URL` to a new deployment.
+
+## Deploying the Fission pipeline
+
+Prerequisites:
+
+- a Kubernetes cluster with Fission and its KEDA Redis MQ integration;
+- Redis reachable at the in-cluster address configured by the functions;
+- Elasticsearch 8;
+- `kubectl` and the Fission CLI;
+- API credentials for the selected social platforms.
+
+Create runtime credentials as Kubernetes Secrets. Replace every placeholder locally; do not commit real values.
+
+```bash
 kubectl create secret generic reddit-credentials \
   --from-literal=REDDIT_CLIENT_ID='<reddit-client-id>' \
   --from-literal=REDDIT_CLIENT_SECRET='<reddit-client-secret>'
@@ -51,83 +151,54 @@ kubectl create secret generic mastodon-credentials \
 kubectl create secret generic es-credentials \
   --from-literal=ES_USERNAME='<elasticsearch-username>' \
   --from-literal=ES_PASSWORD='<elasticsearch-password>'
-
-# 2. Apply Fission specs
-
-(cd backend
-cd functions
-fission spec apply --specdir fission/specs --wait .)
-
-
-# 3. Monitor function logs
-fission fn logs -f --name {function-name}
-
-# 4. Monitor pods activities
-kubectl get pods -n fission
-
-# 5. Monitor nodes usage
-kubectl top nodes
-
-# 6. Restful API usage
-kubectl port-forward service/router -n fission 9090:80
-curl http://localhost:9090/posts/days/2025-05-10 | jq '.'
-curl http://localhost:9090/posts/days/2025-05-10/topics/greens | jq '.'
-
 ```
 
-## Code Layout
-```
-README.md              - Project overview, setup instructions, and how to run the system
+Apply the Fission specifications from the `backend` directory so the package include paths resolve correctly:
 
-frontend/              - Jupyter notebooks for:
-                         - Visualising post volumes, topics, and trends
-                         - Map visualisations
-
-backend/               - Server-side logic and deployment files
-│
-├── fission/           - All Fission-related source code and specs
-│   │
-│   ├── functions/     - Python functions deployed with Fission
-│   │   ├── bharvester-h/   - BlueSky historical post harvester
-│   │   ├── mharvester/     - Mastodon harvester
-│   │   ├── rharvester/     - Reddit harvester
-│   │   ├── enqueue/        - Redis message enqueue function
-│   │   ├── bprocessor/     - BlueSky post processor
-│   │   ├── mprocessor/     - Mastodon post processor
-│   │   ├── rprocessor/     - Reddit post processor
-│   │   ├── addobservations/ - Function that writes posts to ElasticSearch
-│   │   └── postscount/        - ReSTful API to query post volume in a given date with given topic (optional)
-│   │
-│   └── specs/         - Fission YAML spec files (used with `fission spec apply`)
-│       ├── function-*.yaml       - Definitions for all 9 functions
-│       ├── package-*.yaml        - Fission packages including source archives and build commands
-│       ├── route-*.yaml          - HTTP trigger routes (ReSTful API endpoints)
-│       ├── timetrigger-*.yaml    - Timer-based triggers for periodic harvesting
-│       ├── mqtrigger-*.yaml      - Redis queue triggers for function chaining
-│       ├── configmap.yaml        - ConfigMap for secrets and runtime parameters
-│       └── .specignore           - Ignore list to exclude files from spec validation
-
-test/                  - Unit and integration tests using `unittest`
-                         - Test coverage for processors, enqueue logic, and API response validation
-
-database/              - ElasticSearch type mappings
-
-data/                  - Optional: static files or sample JSON used for test ingestion
-
-docs/                  - Final project report
-
-```
-
-## Testing
 ```bash
-# 1. Unit Test
-python -m unittest test.test_bprocessor
-python -m unittest test.test_enqueue
-python -m unittest test.test_mprocessor
-python -m unittest test.test_rprocessor
-python -m unittest test.test_addobservations
-
-# 2. End-to-end Test
-python -m unittest test.test_end_to_end
+cd backend
+fission spec apply --specdir fission/specs --wait
 ```
----
+
+Example query routes after forwarding the Fission router:
+
+```bash
+kubectl port-forward service/router -n fission 9090:80
+curl http://localhost:9090/posts/days/2025-05-10
+curl http://localhost:9090/posts/days/2025-05-10/topics/greens
+```
+
+## Tests
+
+Tests isolate external services with mocks and cover payload validation, platform normalisation, location and topic extraction, Redis enqueue behaviour, Elasticsearch indexing, and a function-level end-to-end flow.
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m unittest discover -s test -v
+```
+
+Function deployment dependencies remain in each Fission package's `requirements.txt`; `requirements-dev.txt` provides one installation entry point for local development and CI.
+
+## Team and attribution
+
+AutoPolis was developed by a five-person team for the University of Melbourne:
+
+- Devin (Angqi) Meng
+- Yichen Long
+- Xuan Wu
+- Zining Zhang
+- Jingqiu Meng
+
+### Portfolio contribution
+
+**Devin (Angqi) Meng** designed and helped build the end-to-end system architecture. His work focused on:
+
+- designing the event-driven ingestion and processing pipeline;
+- implementing social-platform harvesters, including API integration, cursor management, batching, and deduplication;
+- implementing processors that normalise platform payloads and enrich posts with political-topic and Australian-location metadata;
+- provisioning and configuring the cloud environment, including Kubernetes, Fission, Redis, Elasticsearch, and the functions' triggers and deployment specifications;
+- integrating the pipeline's components from collection through queue-based processing to persistent storage.
+
+GitHub Actions runs the complete test suite on every pull request and every push to `main`. This CI workflow was added while preparing the original project for portfolio publication and was not part of the university deployment.
+
+The original submission report is available in `docs/COMP90024_team_60_report.pdf`.

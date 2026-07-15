@@ -1,0 +1,11 @@
+# Runtime dependencies used across the Fission functions
+atproto
+elasticsearch8==8.14.0
+Flask==3.0.2
+praw==7.7.1
+python-dateutil
+redis==5.0.8
+requests==2.31.0
+
+# Test tooling
+coverage[toml]
