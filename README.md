@@ -125,7 +125,7 @@ Key implementation areas:
 - `*processor`: schema normalisation, topic mapping, and location extraction.
 - `addobservations`: deterministic indexing into Elasticsearch.
 - `countposts`: date- and topic-filtered post counts.
-- `es-api`: Elasticsearch health, index listing, and scroll-search endpoints.
+- `es-api`: optional standalone Elasticsearch health, index listing, and scroll-search service.
 
 ## Running the analysis locally
 
@@ -139,7 +139,18 @@ pip install pandas plotly seaborn matplotlib wordcloud transformers nltk request
 jupyter notebook frontend/frontend.ipynb
 ```
 
-The notebook was originally connected to the deployed Elasticsearch API. To run it after the original cluster shutdown, replace its API-loading cell with the sample dataset in `data/sample_social_posts_500.json`, or point `BASE_URL` to a new deployment.
+The notebook defaults to `http://localhost:8888/es-api/scroll_search`. Point it to a deployed query service without editing the notebook:
+
+```bash
+export AUTOPOLIS_API_URL="https://your-api.example/es-api/scroll_search"
+jupyter notebook frontend/frontend.ipynb
+```
+
+Alternatively, replace its API-loading cell with the sample dataset in `data/sample_social_posts_500.json`.
+
+### Optional Elasticsearch query API
+
+`backend/fission/functions/es-api` is a standalone optional query service with health, index-listing, and scroll-search endpoints. Its `function.yaml` and `trigger.yaml` are reference deployment manifests and are not applied by the primary `backend/fission/specs` application. The ingestion pipeline and date/topic count routes do not depend on this service.
 
 ## Deploying the Fission pipeline
 
